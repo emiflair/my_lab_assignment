@@ -71,7 +71,10 @@ class CourseListView(generic.ListView):
         user = self.request.user
         courses = Course.objects.order_by('-total_enrollment')[:10]
         for course in courses:
-            course.is_enrolled = check_if_enrolled(user, course) if user.is_authenticated else False
+            course.is_enrolled = (
+                Enrollment.objects.filter(user=user, course=course).exists()
+                if user.is_authenticated else False
+            )
         return courses
 
 # Course Detail View
@@ -89,9 +92,13 @@ def enroll(request, course_id):
         course.save()
     return HttpResponseRedirect(reverse('onlinecourse:course_details', args=(course.id,)))
 
-# Extract selected answers from POST data
+# ✅ Corrected: Extract selected answers from POST data
 def extract_answers(request):
-    return list(map(int, request.POST.getlist('choice')))
+    selected_ids = []
+    for key in request.POST:
+        if key.startswith('choice_'):
+            selected_ids.extend(map(int, request.POST.getlist(key)))
+    return selected_ids
 
 # Submit View
 def submit(request, course_id):
@@ -102,7 +109,6 @@ def submit(request, course_id):
     submission = Submission.objects.create(enrollment=enrollment)
     selected_ids = extract_answers(request)
     print("DEBUG: Selected choice IDs:", selected_ids)
-
 
     for choice_id in selected_ids:
         choice = Choice.objects.get(id=choice_id)

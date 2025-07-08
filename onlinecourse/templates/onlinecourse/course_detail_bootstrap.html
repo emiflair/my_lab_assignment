@@ -73,7 +73,7 @@
                         {% for choice in question.choice_set.all %}
                         <div class="form-check">
                             <label class="form-check-label">
-                                <input type="checkbox" class="form-check-input" name="choice" value="{{ choice.id }}">
+                                <input type="checkbox" class="form-check-input" name="choice_{{ question.id }}" value="{{ choice.id }}">
                                 {{ choice.content }}
                             </label>
                         </div>
